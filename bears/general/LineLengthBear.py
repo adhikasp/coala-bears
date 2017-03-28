@@ -1,13 +1,16 @@
 import re
 
+import logging
 from coalib.bearlib import deprecate_settings
 from coalib.bearlib.spacing.SpacingHelper import SpacingHelper
 from coalib.bears.LocalBear import LocalBear
 from coalib.results.Result import Result
 from coalib.settings.Setting import typed_list
+from coalib.bearlib.aspects.Formatting import Formatting
 
-
-class LineLengthBear(LocalBear):
+class LineLengthBear(LocalBear, aspects={
+        'detect': [Formatting.Line.LineLength]
+    }):
     LANGUAGES = {'All'}
     AUTHORS = {'The coala developers'}
     AUTHORS_EMAILS = {'coala-devel@googlegroups.com'}
@@ -20,7 +23,8 @@ class LineLengthBear(LocalBear):
             file,
             max_line_length: int=79,
             indent_size: int=SpacingHelper.DEFAULT_TAB_WIDTH,
-            ignore_length_regex: typed_list(str)=()):
+            ignore_length_regex: typed_list(str)=(),
+            aspects=None):
         '''
         Yields results for all lines longer than the given maximum line length.
 
@@ -49,4 +53,5 @@ class LineLengthBear(LocalBear):
                     line=line_number + 1,
                     column=max_line_length + 1,
                     end_line=line_number + 1,
-                    end_column=len(line))
+                    end_column=len(line),
+                    aspects=Formatting.Line.LineLength)

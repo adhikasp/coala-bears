@@ -7,9 +7,11 @@ from dependency_management.requirements.PipRequirement import PipRequirement
 from coalib.results.Diff import Diff
 from coalib.results.Result import Result
 from coalib.settings.Setting import typed_list
+from coalib.bearlib.aspects.Formatting import Formatting
 
-
-class PEP8Bear(LocalBear):
+class PEP8Bear(LocalBear, aspects={
+    'detect': [Formatting.Line.LineLength]
+}):
     LANGUAGES = {'Python', 'Python 2', 'Python 3'}
     REQUIREMENTS = {PipRequirement('autopep8', '1.2')}
     AUTHORS = {'The coala developers'}
@@ -23,7 +25,8 @@ class PEP8Bear(LocalBear):
             indent_size: int=SpacingHelper.DEFAULT_TAB_WIDTH,
             pep_ignore: typed_list(str)=(),
             pep_select: typed_list(str)=(),
-            local_pep8_config: bool=False):
+            local_pep8_config: bool=False,
+            aspects=None):
         """
         Detects and fixes PEP8 incompliant code. This bear will not change
         functionality of the code in any way.
@@ -36,6 +39,11 @@ class PEP8Bear(LocalBear):
         :param local_pep8_config: Set to true if autopep8 should use a config
                                   file as if run normally from this directory.
         """
+        # TODO find better way to do boolean operation against Setting[str]
+        if str(aspects) != '' or str(aspects) is not None:
+            pep_select = ''
+            if 'LineLength' in aspects:
+                pep_select = ['E501']
         options = {'ignore': pep_ignore,
                    'select': pep_select,
                    'max_line_length': max_line_length,
@@ -51,4 +59,6 @@ class PEP8Bear(LocalBear):
             yield Result(self,
                          'The code does not comply to PEP8.',
                          affected_code=(diff.range(filename),),
-                         diffs={filename: diff})
+                         diffs={filename: diff},
+                         aspects=Formatting) # TODO should be
+                                             #   a leaf.
