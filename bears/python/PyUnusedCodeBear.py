@@ -4,9 +4,12 @@ from coalib.bears.LocalBear import LocalBear
 from dependency_management.requirements.PipRequirement import PipRequirement
 from coalib.results.Diff import Diff
 from coalib.results.Result import Result
+import coalib.bearlib.aspects as coala_aspects
 
-
-class PyUnusedCodeBear(LocalBear):
+class PyUnusedCodeBear(LocalBear, aspects={
+    'fix': [coala_aspects['UnusedImport'], 
+            coala_aspects['UnusedLocalVariable']]
+}):
     LANGUAGES = {'Python', 'Python 2', 'Python 3'}
     REQUIREMENTS = {PipRequirement('autoflake', '0.6.6')}
     AUTHORS = {'The coala developers'}
@@ -29,6 +32,15 @@ class PyUnusedCodeBear(LocalBear):
         :param remove_unused_variables:
             ``False`` keeps unused variables
         """
+        # Map aspects with old options
+        if self.section.aspects is not None:
+            if self.section.aspects.get('UnusedImport'):
+                remove_all_unused_imports = (
+                    self.section.aspects.get('UnusedImport')
+                    .remove_only_standard_package)
+            remove_unused_variables = (
+                True if self.section.aspects.get('UnusedLocalVariable')
+                else False)
 
         corrected = autoflake.fix_code(
                        ''.join(file),
